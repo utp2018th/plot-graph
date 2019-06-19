@@ -20,7 +20,7 @@
 これを`plot_master.py`を使ってグラフ化すると以下のようになります。
 なお、各サンプルのラベル(Ace)とかは英語にしておきましょう。日本語だとうまく出力されません。
 
-![サンプル](https://github.com/yoshitaku-jp/test_doc/blob/images/dog_akitainu.png)
+![サンプル](https://github.com/utp2018th/plot-graph/blob/master/output/graph.png)
 
 また、最小二乗法を用いた近似直線も引くことが可能です。説明については気が向いたら書きます。
 
