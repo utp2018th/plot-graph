@@ -52,8 +52,8 @@ class Plot_master():
         |ex2| y | y |   | y |
         |ex3| y | y |   | y |
         """
-        xlabel = 'x-label'
-        ylabel = 'y-label'
+        xlabel = 'study time'
+        ylabel = 'grades'
         box = []
         labels =[]
         for i,row in enumerate(array):
@@ -77,7 +77,7 @@ class Plot_master():
             elif ans == "2":
                 self.plot_polyfit(x_line,y)
 
-        plt.title('Graph title')
+        plt.title('Relationship between study time and grades')
         plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0, fontsize=9)
         plt.subplots_adjust(right=0.77)
         # plt.subplots_adjust(right=0.8)
@@ -86,7 +86,7 @@ class Plot_master():
         # グリッド線を引く
         plt.grid()
         # それぞれの軸の最大値と最小値
-        plt.xlim(-10)
+        # plt.xlim(-10)
         plt.ylim(0)
 
 if __name__ == "__main__":
