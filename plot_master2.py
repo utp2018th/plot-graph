@@ -23,7 +23,10 @@ def get_array_from_data(path):
     return array2
 
 def generate_random_color():
-    return '#{:X}{:X}{:X}'.format(*[np.random.randint(0, 255) for _ in range(3)])
+    ans = ""
+    while len(ans) != 7:
+        ans = '#{:X}{:X}{:X}'.format(*[np.random.randint(0, 255) for _ in range(3)])
+    return ans
 
 class Data:
     # それぞれのデータ行をオブジェクトとするためのクラス
