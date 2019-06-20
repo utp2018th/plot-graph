@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import math
 import numpy as np
 import csv
+import sys
 
 def sig_dig(float):
     plus = True
@@ -46,11 +47,11 @@ class Data:
 
 class Graph_master:
     # グラフの描画に関するクラスはこちら
-    def __init__(self):
-        self.xlabel = 'xlabel'
-        self.ylabel = 'ylabel'
-        self.title = 'Graph Title'
-        self.output_path = 'output/sample'
+    def __init__(self,title='Graph Title',xlabel='xlabel',ylabel='ylabel',output_path='img'):
+        self.xlabel = xlabel
+        self.ylabel = ylabel
+        self.title = title
+        self.output_path = 'output' + output_path
 
     def plot_proportion(self,x,y):
         if not y.proportion:
@@ -98,9 +99,26 @@ class Graph_master:
         else:
             plt.show()
 
-if __name__ == "__main__":
-    path = 'input/sample.csv'
+def main(argv):
+    # ファイル読み込み
+    if len(argv) == 2:
+        path = argv[1]
+    else:
+        path = input('グラフ化したい表のファイルを入力してください\n>> ')
     array2 = get_array_from_data(path)
+
+    # 表の出力
+    msg = input('読み込むファイルにあらかじめグラフのタイトルなどを入れている場合は「1」を、そうでない場合はそれ以外の入力をしてください\n>> ')
+    if msg == "1" and len(array2[0]) == 4:
+        title,xlabel,ylabel,output_path = array2[0]
+        del array2[0]
+    else:
+        title = input('グラフのタイトルを入力してください(なるべく英語で)\n>>')
+        xlabel = input('x軸のラベルを入力してください(なるべく英語で)\n>>')
+        ylabel = input('y軸のラベルを入力してください(なるべく英語で)\n>>')
+        output_path = input('出力するファイル名を入力してください(なるべく英語で)\n>>')
+
+    # データをオブジェクト化した上でプロット
     box = []
     for idx,array in enumerate(array2):
         rows = Data(array)
@@ -108,5 +126,8 @@ if __name__ == "__main__":
             x = rows
         else:
             box.append(rows)
-    graph = Graph_master()
+    graph = Graph_master(title,xlabel,ylabel,output_path)
     graph.make_graph(x,box)
+
+if __name__ == "__main__":
+    main(sys.argv)
