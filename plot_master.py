@@ -91,7 +91,7 @@ class Plot_master():
 
 if __name__ == "__main__":
     plt.figure(figsize=(3*3,2*3),dpi=128)
-    path = 'input/sample.csv'
+    path = 'input/0620.csv'
     data = Plot_master()
     data = data.csv_lists_to_array(path)
     pm = Plot_master()
