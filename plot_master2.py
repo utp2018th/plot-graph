@@ -3,6 +3,7 @@ import math
 import numpy as np
 import csv
 import sys
+from scipy.optimize import curve_fit
 
 # sig_dig : significant digit(有効数字)
 def sig_dig(float):
@@ -32,8 +33,12 @@ def generate_random_color():
 # フィッテイング曲線の種類
 fitting_types = (
     'proportion',
-    'liner'
+    'liner',
+    'Michaelis Menten'
     )
+
+def mm(x,a,b):
+    return  a*x/(b+x)
 
 class Data:
     # それぞれのデータ行をオブジェクトとするためのクラス
@@ -50,6 +55,8 @@ class Data:
             self.fit_values = np.dot(x, self.values)/(x**2).sum()
         elif self.fit_type == fitting_types[1]:
             self.fit_values = np.polyfit(x,self.values,1)
+        elif self.fit_type == fitting_types[2]:
+            self.fit_values,cov = curve_fit(mm,x,self.values)
 
 class Graph_master:
     # グラフの描画に関するクラスはこちら
@@ -80,6 +87,15 @@ class Graph_master:
             text = equation + '\n' + corr
             plt.plot(x.values,y1,c=y.color,label=text)
 
+        elif y.fit_type == fitting_types[2]:
+            a,b = y.fit_values
+            x_line = np.linspace(min(x.values),max(x.values),100)
+            y1 = a * x_line / (b + x_line)
+            equation = 'y={}x/({}+x)'.format(round(a,y.sig_dig),round(b,y.sig_dig))
+            # corr = 'R={}'.format(round(np.corrcoef(x_line,y.values)[0][1],y.sig_dig))
+            text = equation #+ '\n' + corr
+            plt.plot(x_line,y1,c=y.color,label=text)
+
         else:
             print("No Approximate Curve")
 
@@ -99,6 +115,8 @@ class Graph_master:
                 var_y.fit_type = fitting_types[0]
             elif ans == "2":
                 var_y.fit_type = fitting_types[1]
+            elif ans == "3":
+                var_y.fit_type = fitting_types[2]
             self.plot_fitting(var_x,var_y)
 
         # グラフの外観をいい感じに調節しているのはここ
