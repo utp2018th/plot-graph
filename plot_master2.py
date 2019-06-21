@@ -90,11 +90,13 @@ class Graph_master:
         elif y.fit_type == fitting_types[2]:
             a,b = y.fit_values
             x_line = np.linspace(min(x.values),max(x.values),100)
-            y1 = a * x_line / (b + x_line)
+            y_line = a * x_line / (b + x_line)
+            y1 = a * x.values / (b + x.values)
             equation = 'y={}x/({}+x)'.format(round(a,y.sig_dig),round(b,y.sig_dig))
-            # corr = 'R={}'.format(round(np.corrcoef(x_line,y.values)[0][1],y.sig_dig))
-            text = equation #+ '\n' + corr
-            plt.plot(x_line,y1,c=y.color,label=text)
+            corr = np.corrcoef(y.values,y1)[0,1]
+            equation_r = 'R={}'.format(round(corr,y.sig_dig))
+            text = equation + '\n' + equation_r
+            plt.plot(x_line,y_line,c=y.color,label=text)
 
         else:
             print("No Approximate Curve")
