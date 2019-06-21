@@ -86,7 +86,7 @@ class Graph_master:
             if ans ==  "1":
                 self.plot_proportion(var_x,var_y)
             elif ans == "2":
-                self.plot_liner(var_x,vary)
+                self.plot_liner(var_x,var_y)
 
         # グラフの外観をいい感じに調節しているのはここ
         plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0, fontsize=9)

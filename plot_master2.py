@@ -25,10 +25,15 @@ def get_array_from_data(path):
     return array2
 
 def generate_random_color():
-    ans = ""
-    while len(ans) != 7:
-        ans = '#{:X}{:X}{:X}'.format(*[np.random.randint(0, 255) for _ in range(3)])
+    rc = [np.random.randint(0,255) for _ in range(3)]
+    ans = '#{:02X}{:02X}{:02X}'.format(*rc)
     return ans
+
+# フィッテイング曲線の種類
+fitting_types = (
+    'proportion',
+    'liner'
+    )
 
 class Data:
     # それぞれのデータ行をオブジェクトとするためのクラス
@@ -37,14 +42,14 @@ class Data:
         self.values = np.array([float(i) for i in l[1:]])
         self.color = generate_random_color()
         self.sig_dig = 3 # デフォルトの有効数字
-        self.proportion = None
-        self.linear = None
+        self.fit_type = None
+        self.fit_values = None
 
-    def get_proportion(self,x,y):
-        self.proportion = np.dot(x, y)/(x**2).sum()
-
-    def get_linear(self,x,y):
-        self.linear = np.polyfit(x,y,1)
+    def fitting(self,x):
+        if self.fit_type == fitting_types[0]:
+            self.fit_values = np.dot(x, self.values)/(x**2).sum()
+        elif self.fit_type == fitting_types[1]:
+            self.fit_values = np.polyfit(x,self.values,1)
 
 class Graph_master:
     # グラフの描画に関するクラスはこちら
@@ -57,40 +62,44 @@ class Graph_master:
         self.ylabel = args[2]
         self.output_path = 'output/' + args[3]
 
-    def plot_proportion(self,x,y):
-        if not y.proportion:
-            y.get_proportion(x.values,y.values)
-        a = y.proportion
-        y1 = a * x.values
-        equation = 'y=' + str(round(a,y.sig_dig)) + 'x'
-        corr = 'R={}'.format(round(np.corrcoef(x.values,y.values)[0][1],y.sig_dig))
-        text = equation + '\n' + corr
-        plt.plot(x.values,y1,c=y.color,label=text)
+    def plot_fitting(self,x,y):
+        y.fitting(x.values)
+        if y.fit_type == fitting_types[0]:
+            a = y.fit_values
+            y1 = a * x.values
+            equation = 'y=' + str(round(a,y.sig_dig)) + 'x'
+            corr = 'R={}'.format(round(np.corrcoef(x.values,y.values)[0][1],y.sig_dig))
+            text = equation + '\n' + corr
+            plt.plot(x.values,y1,c=y.color,label=text)
 
-    def plot_liner(self,x,y):
-        if not y.linear:
-            y.get_linear(x.values,y.values)
-        a,b = y.linear
-        y1 = a * x.values + b
-        equation = 'y=' + str(round(a,y.sig_dig)) + 'x+' + str(round(b,y.sig_dig))
-        corr = 'R={}'.format(round(np.corrcoef(x.values,y.values)[0][1],y.sig_dig))
-        text = equation + '\n' + corr
-        plt.plot(x.values,y1,c=y.color,label=text)
+        elif y.fit_type == fitting_types[1]:
+            a,b = y.fit_values
+            y1 = a * x.values + b
+            equation = 'y=' + str(round(a,y.sig_dig)) + 'x+' + str(round(b,y.sig_dig))
+            corr = 'R={}'.format(round(np.corrcoef(x.values,y.values)[0][1],y.sig_dig))
+            text = equation + '\n' + corr
+            plt.plot(x.values,y1,c=y.color,label=text)
 
-    def make_graph(self,var_x,var_y):
+        else:
+            print("No Approximate Curve")
+
+    def make_graph(self,var_x,ys):
         plt.figure(figsize=(9,6),dpi=128)
         plt.title(self.title)
         plt.xlabel(self.xlabel)
         plt.ylabel(self.ylabel)
+
+        # 散布図と近似曲線のプロット
         input_text = 'もし比例の近似直線が欲しいなら1を、線形の近似直線が欲しいなら2を、'
         input_text += '近似直線が不要な場合はそれ以外の入力をしてください\n>> '
         ans = input(input_text)
-        for y in var_y:
-            plt.scatter(var_x.values,y.values,label=y.label,c=y.color)
+        for var_y in ys:
+            plt.scatter(var_x.values,var_y.values,label=var_y.label,c=var_y.color)
             if ans ==  "1":
-                self.plot_proportion(var_x,y)
+                var_y.fit_type = fitting_types[0]
             elif ans == "2":
-                self.plot_liner(var_x,y)
+                var_y.fit_type = fitting_types[1]
+            self.plot_fitting(var_x,var_y)
 
         # グラフの外観をいい感じに調節しているのはここ
         plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0, fontsize=9)
@@ -138,7 +147,10 @@ def main(argv):
     with open(args[3]+'eq&R.csv',mode='w') as f:
         for i,y in enumerate(box):
             f.write('label,a,b\n')
-            text = '{},{},{}\n'.format(y.label,y.linear[0],y.linear[1])
+            text0 = ""
+            for i in y.fit_values:
+                text0 += ',' + str(i)
+            text = '{}{}\n'.format(y.label,text0)
             f.write(text)
 
 if __name__ == "__main__":
