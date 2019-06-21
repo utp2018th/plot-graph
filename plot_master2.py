@@ -49,6 +49,7 @@ class Data:
         self.sig_dig = 3 # デフォルトの有効数字
         self.fit_type = None
         self.fit_values = None
+        self.corr = None
 
     def fitting(self,x):
         if self.fit_type == fitting_types[0]:
@@ -71,30 +72,30 @@ class Graph_master:
 
     def plot_fitting(self,x,y):
         y.fitting(x.values)
-        if y.fit_type == fitting_types[0]:
-            a = y.fit_values
-            y1 = a * x.values
-            equation = 'y=' + str(round(a,y.sig_dig)) + 'x'
-            corr = 'R={}'.format(round(np.corrcoef(x.values,y.values)[0][1],y.sig_dig))
-            text = equation + '\n' + corr
-            plt.plot(x.values,y1,c=y.color,label=text)
+        if y.fit_type in fitting_types:
+            if y.fit_type == fitting_types[0]:
+                a = y.fit_values
+                x_line = x.values
+                y1 = a * x.values
+                y_line = y1
+                equation = 'y=' + str(round(a,y.sig_dig)) + 'x'
 
-        elif y.fit_type == fitting_types[1]:
-            a,b = y.fit_values
-            y1 = a * x.values + b
-            equation = 'y=' + str(round(a,y.sig_dig)) + 'x+' + str(round(b,y.sig_dig))
-            corr = 'R={}'.format(round(np.corrcoef(x.values,y.values)[0][1],y.sig_dig))
-            text = equation + '\n' + corr
-            plt.plot(x.values,y1,c=y.color,label=text)
+            elif y.fit_type == fitting_types[1]:
+                a,b = y.fit_values
+                x_line = x.values
+                y1 = a * x.values + b
+                y_line = y1
+                equation = 'y=' + str(round(a,y.sig_dig)) + 'x+' + str(round(b,y.sig_dig))
 
-        elif y.fit_type == fitting_types[2]:
-            a,b = y.fit_values
-            x_line = np.linspace(min(x.values),max(x.values),100)
-            y_line = a * x_line / (b + x_line)
-            y1 = a * x.values / (b + x.values)
-            equation = 'y={}x/({}+x)'.format(round(a,y.sig_dig),round(b,y.sig_dig))
-            corr = np.corrcoef(y.values,y1)[0,1]
-            equation_r = 'R={}'.format(round(corr,y.sig_dig))
+            elif y.fit_type == fitting_types[2]:
+                a,b = y.fit_values
+                y1 = a * x.values / (b + x.values)
+                x_line = np.linspace(min(x.values),max(x.values),100)
+                y_line = a * x_line / (b + x_line)
+                equation = 'y={}x/({}+x)'.format(round(a,y.sig_dig),round(b,y.sig_dig))
+
+            y.corr = np.corrcoef(y.values,y1)[0,1]
+            equation_r = 'R={}'.format(round(y.corr,y.sig_dig))
             text = equation + '\n' + equation_r
             plt.plot(x_line,y_line,c=y.color,label=text)
 
@@ -163,8 +164,8 @@ def main(argv):
     graph = Graph_master(args)
     graph.make_graph(x,box)
 
-    # 直線の式をcsvに出力する
-    with open(args[3]+'eq&R.csv',mode='w') as f:
+    # 近似式と相関係数をcsvに出力する
+    with open('output/'+args[3]+'-fitted.csv',mode='w') as f:
         for i,y in enumerate(box):
             f.write('label,a,b\n')
             text0 = ""
