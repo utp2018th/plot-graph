@@ -57,5 +57,8 @@ $ python plot_master2.py input/sample.csv
 
 
 ### セガールの秘密をここに書いてね
+<<<<<<< HEAD
 
 ### うんちが虹色♡
+=======
+>>>>>>> root_branch/master

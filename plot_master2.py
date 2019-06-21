@@ -2,7 +2,9 @@ import matplotlib.pyplot as plt
 import math
 import numpy as np
 import csv
+import sys
 
+# sig_dig : significant digit(有効数字)
 def sig_dig(float):
     plus = True
     if float < 0:
@@ -46,11 +48,14 @@ class Data:
 
 class Graph_master:
     # グラフの描画に関するクラスはこちら
-    def __init__(self):
-        self.xlabel = 'xlabel'
-        self.ylabel = 'ylabel'
-        self.title = 'Graph Title'
-        self.output_path = 'output/sample'
+    def __init__(self,args):
+        for i,x in enumerate(args):
+            if x == "":
+                args[i] = 'You should input some words' if i < 3 else 'image'
+        self.title = args[0]
+        self.xlabel = args[1]
+        self.ylabel = args[2]
+        self.output_path = 'output/' + args[3]
 
     def plot_proportion(self,x,y):
         if not y.proportion:
@@ -98,9 +103,27 @@ class Graph_master:
         else:
             plt.show()
 
-if __name__ == "__main__":
-    path = 'input/sample.csv'
+def main(argv):
+    # ファイル読み込み
+    if len(argv) == 2:
+        path = argv[1]
+    else:
+        path = input('グラフ化したい表のファイルを入力してください\n>> ')
     array2 = get_array_from_data(path)
+
+    # 表の出力
+    msg = input('読み込むファイルにあらかじめグラフのタイトルなどを入れている場合は「1」を、そうでない場合はそれ以外の入力をしてください\n>> ')
+    if msg == "1" and len(array2[0]) == 4:
+        args = array2[0]
+        del array2[0]
+    else:
+        title = input('グラフのタイトルを入力してください(なるべく英語で)\n>>')
+        xlabel = input('x軸のラベルを入力してください(なるべく英語で)\n>>')
+        ylabel = input('y軸のラベルを入力してください(なるべく英語で)\n>>')
+        output_path = input('出力するファイル名を入力してください(なるべく英語で)\n>>')
+        args = [title,xlabel,ylabel,output_path]
+
+    # データをオブジェクト化した上でプロット
     box = []
     for idx,array in enumerate(array2):
         rows = Data(array)
@@ -108,5 +131,15 @@ if __name__ == "__main__":
             x = rows
         else:
             box.append(rows)
-    graph = Graph_master()
+    graph = Graph_master(args)
     graph.make_graph(x,box)
+
+    # 直線の式をcsvに出力する
+    with open(args[3]+'eq&R.csv',mode='w') as f:
+        for i,y in enumerate(box):
+            f.write('label,a,b\n')
+            text = '{},{},{}\n'.format(y.label,y.linear[0],y.linear[1])
+            f.write(text)
+
+if __name__ == "__main__":
+    main(sys.argv)

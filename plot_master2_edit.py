@@ -39,7 +39,7 @@ class Data:
         self.linear = None
 
     def get_proportion(self,x):
-        self.proportion = np.dot(x.values, self.values)/(x**2).sum()
+        self.proportion = np.dot(x.values, self.values)/(x.values**2).sum()
 
     def get_linear(self,x):
         self.linear = np.polyfit(x.values,self.values,1)
@@ -58,8 +58,8 @@ class Graph_master:
             y.get_proportion(x)
         a = y.proportion
         y1 = a * x.values
-        equation = 'y = {:.03e}x'.format(a)
-        corr = 'R = {:.04}'.format(np.corrcoef(x.values,y.values)[0][1])
+        equation = 'y = {:.3e}x'.format(a)
+        corr = 'R = {:.4}'.format(np.corrcoef(x.values,y.values)[0][1])
         text = equation + '\n' + corr
         plt.plot(x.values,y1,c=y.color,label=text)
 
@@ -68,12 +68,12 @@ class Graph_master:
             y.get_linear(x)
         a,b = y.linear
         y1 = a * x.values + b
-        equation = 'y = {0:.03e}x + {1:.03e}'.format(a,b)
-        corr = 'R = {:.04}'.format(np.corrcoef(x.values,y.values)[0][1])
+        equation = 'y = {0:.3e}x + {1:.3e}'.format(a,b)
+        corr = 'R = {:.4}'.format(np.corrcoef(x.values,y.values)[0][1])
         text = equation + '\n' + corr
         plt.plot(x.values,y1,c=y.color,label=text)
 
-    def make_graph(self,var_x,vars_y):
+    def make_graph(self,var_x,ys):
         plt.figure(figsize=(9,6),dpi=128)
         plt.title(self.title)
         plt.xlabel(self.xlabel)
@@ -81,7 +81,7 @@ class Graph_master:
         input_text = 'もし比例の近似直線が欲しいなら1を、線形の近似直線が欲しいなら2を、'
         input_text += '近似直線が不要な場合はそれ以外の入力をしてください\n>> '
         ans = input(input_text)
-        for var_y in vars_y:
+        for var_y in ys:
             plt.scatter(var_x.values,var_y.values,label=var_y.label,c=var_y.color)
             if ans ==  "1":
                 self.plot_proportion(var_x,var_y)
@@ -91,7 +91,6 @@ class Graph_master:
         # グラフの外観をいい感じに調節しているのはここ
         plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0, fontsize=9)
         plt.subplots_adjust(right=0.77)
-
         plt.grid()
         msg = input('作成したグラフを保存するなら「s」を、画面に表示するならそれ以外の入力をしてください\n>> ')
         if msg == "s":
