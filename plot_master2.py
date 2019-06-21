@@ -4,6 +4,7 @@ import numpy as np
 import csv
 import sys
 
+# sig_dig : significant digit(有効数字)
 def sig_dig(float):
     plus = True
     if float < 0:
@@ -132,6 +133,13 @@ def main(argv):
             box.append(rows)
     graph = Graph_master(args)
     graph.make_graph(x,box)
+
+    # 直線の式をcsvに出力する
+    with open(args[3]+'eq&R.csv',mode='w') as f:
+        for i,y in enumerate(box):
+            f.write('label,a,b\n')
+            text = '{},{},{}\n'.format(y.label,y.linear[0],y.linear[1])
+            f.write(text)
 
 if __name__ == "__main__":
     main(sys.argv)
