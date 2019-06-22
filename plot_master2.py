@@ -50,6 +50,7 @@ class Data:
         self.fit_type = None
         self.fit_values = None
         self.corr = None
+        self.r_sq = None
 
     def fitting(self,x):
         if self.fit_type == fitting_types[0]:
@@ -72,31 +73,46 @@ class Graph_master:
 
     def plot_fitting(self,x,y):
         y.fitting(x.values)
-        if y.fit_type in fitting_types:
-            if y.fit_type == fitting_types[0]:
-                a = y.fit_values
-                x_line = x.values
-                y1 = a * x.values
-                y_line = y1
-                equation = 'y=' + str(round(a,y.sig_dig)) + 'x'
+        if y.fit_type == fitting_types[0]:
+            a = y.fit_values
+            y1 = a * x.values
+            pre_equation = 'y={:.' + str(y.sig_dig) + 'e}x'
+            equation = pre_equation.format(a)
+            y.corr = np.corrcoef(x.values,y.values)[0][1]
+            y.r_sq = y.corr ** 2
+            text_corr = 'R={:.4}'.format(round(y.corr,y.sig_dig))
+            text = equation + '\n' + text_corr
+            plt.plot(x.values,y1,c=y.color,label=text)
 
-            elif y.fit_type == fitting_types[1]:
-                a,b = y.fit_values
-                x_line = x.values
-                y1 = a * x.values + b
-                y_line = y1
-                equation = 'y=' + str(round(a,y.sig_dig)) + 'x+' + str(round(b,y.sig_dig))
+        elif y.fit_type == fitting_types[1]:
+            a,b = y.fit_values
+            y1 = a * x.values + b
+            if b >= 0:
+                pre_equation = 'y={:.' + str(y.sig_dig) + 'e}x+{:.' + str(y.sig_dig) + 'e}'
+                equation = pre_equation.format(a,b)
+            else:
+                pre_equation = 'y={:.' + str(y.sig_dig) + 'e}x-{:.' + str(y.sig_dig) + 'e}'
+                equation = pre_equation.format(a,abs(b))
+            y.corr = np.corrcoef(x.values,y.values)[0][1]
+            y.r_sq = y.corr ** 2
+            text_corr = 'R={:.4}'.format(round(y.corr,y.sig_dig))
+            text = equation + '\n' + text_corr
+            plt.plot(x.values,y1,c=y.color,label=text)
 
-            elif y.fit_type == fitting_types[2]:
-                a,b = y.fit_values
-                y1 = a * x.values / (b + x.values)
-                x_line = np.linspace(min(x.values),max(x.values),100)
-                y_line = a * x_line / (b + x_line)
-                equation = 'y={}x/({}+x)'.format(round(a,y.sig_dig),round(b,y.sig_dig))
-
-            y.corr = np.corrcoef(y.values,y1)[0,1]
-            equation_r = 'R={}'.format(round(y.corr,y.sig_dig))
-            text = equation + '\n' + equation_r
+        elif y.fit_type == fitting_types[2]:
+            a,b = y.fit_values
+            x_line = np.linspace(min(x.values),max(x.values),100)
+            y_line = a * x_line / (b + x_line)
+            y1 = a * x.values / (b + x.values)
+            pre_equation = 'y={:.' + str(y.sig_dig) + 'e}x/({:.' + str(y.sig_dig) + 'e}+x)'
+            equation = pre_equation.format(a,b)
+            residuals =  y.values - mm(x.values,a,b)
+            rss = np.sum(residuals**2)  #residual sum of squares = rss
+            tss = np.sum((y.values - np.mean(y.values))**2) #total sum of squares = tss
+            y.r_sq = 1 - (rss / tss)
+            text_r_sq = 'R2={:.4}'.format(y.r_sq)
+            print(y.r_sq)
+            text= equation + '\n' + text_r_sq
             plt.plot(x_line,y_line,c=y.color,label=text)
 
         else:
@@ -124,7 +140,7 @@ class Graph_master:
 
         # グラフの外観をいい感じに調節しているのはここ
         plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0, fontsize=9)
-        plt.subplots_adjust(right=0.77)
+        plt.subplots_adjust(right=0.7)
 
         plt.grid()
         msg = input('作成したグラフを保存するなら「s」を、画面に表示するならそれ以外の入力をしてください\n>> ')
