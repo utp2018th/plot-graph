@@ -4,6 +4,7 @@ import numpy as np
 import csv
 import sys
 
+# sig_dig : significant digit(有効数字)
 def sig_dig(float):
     plus = True
     if float < 0:
@@ -24,9 +25,7 @@ def get_array_from_data(path):
     return array2
 
 def generate_random_color():
-    ans = ""
-    while len(ans) != 7:
-        ans = '#{:X}{:X}{:X}'.format(*[np.random.randint(0, 255) for _ in range(3)])
+    ans = '#{:02X}{:02X}{:02X}'.format(*[np.random.randint(0, 255) for _ in range(3)])
     return ans
 
 class Data:
@@ -61,8 +60,8 @@ class Graph_master:
             y.get_proportion(x.values,y.values)
         a = y.proportion
         y1 = a * x.values
-        equation = 'y=' + str(round(a,y.sig_dig)) + 'x'
-        corr = 'R={}'.format(round(np.corrcoef(x.values,y.values)[0][1],y.sig_dig))
+        equation = 'y={:.3e}x'.format(a)
+        corr = 'R={:.4}'.format(np.corrcoef(x.values,y.values)[0][1])
         text = equation + '\n' + corr
         plt.plot(x.values,y1,c=y.color,label=text)
 
@@ -71,8 +70,8 @@ class Graph_master:
             y.get_linear(x.values,y.values)
         a,b = y.linear
         y1 = a * x.values + b
-        equation = 'y=' + str(round(a,y.sig_dig)) + 'x+' + str(round(b,y.sig_dig))
-        corr = 'R={}'.format(round(np.corrcoef(x.values,y.values)[0][1],y.sig_dig))
+        equation = 'y={:.3e}x+{:.3e}'.format(a,b)
+        corr = 'R={:.4}'.format(np.corrcoef(x.values,y.values)[0][1],y.sig_dig)
         text = equation + '\n' + corr
         plt.plot(x.values,y1,c=y.color,label=text)
 
@@ -123,15 +122,16 @@ def main(argv):
         args = [title,xlabel,ylabel,output_path]
 
     # データをオブジェクト化した上でプロット
-    box = []
-    for idx,array in enumerate(array2):
-        rows = Data(array)
-        if idx == 0:
-            x = rows
-        else:
-            box.append(rows)
+    x = array2[0]
     graph = Graph_master(args)
-    graph.make_graph(x,box)
+    graph.make_graph(x,array2[1:])
+
+    # 直線の式をcsvに出力する
+    with open(args[3]+'eq&R.csv',mode='w') as f:
+        for i,y in enumerate(box):
+            f.write('label,a,b\n')
+            text = '{},{},{}\n'.format(y.label,y.linear[0],y.linear[1])
+            f.write(text)
 
 if __name__ == "__main__":
     main(sys.argv)
