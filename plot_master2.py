@@ -5,12 +5,6 @@ import csv
 import sys
 from scipy.optimize import curve_fit
 
-# sig_dig : significant digit(有効数字)
-def sig_dig(float):
-    plus = True
-    if float < 0:
-        plus = False
-    pass
 
 def get_array_from_data(path):
     # グラフ化したい表のファイルを読み込んで、二重配列を返す
@@ -46,7 +40,6 @@ class Data:
         self.label = l[0]
         self.values = np.array([float(i) for i in l[1:]])
         self.color = generate_random_color()
-        self.sig_dig = 3 # デフォルトの有効数字
         self.fit_type = None
         self.fit_values = None
         self.corr = None
@@ -65,22 +58,28 @@ class Graph_master:
     def __init__(self,args):
         for i,x in enumerate(args):
             if x == "":
-                args[i] = 'You should input some words' if i < 3 else 'image'
+                if i < 3:
+                    args[i] = 'You should input some words'
+                elif i == 3:
+                    args[i] = 'image'
+                elif i == 4:
+                    args[i] = 3
         self.title = args[0]
         self.xlabel = args[1]
         self.ylabel = args[2]
         self.output_path = 'output/' + args[3]
+        self.sig_dig = args[4]
 
     def plot_fitting(self,x,y):
         y.fitting(x.values)
         if y.fit_type == fitting_types[0]:
             a = y.fit_values
             y1 = a * x.values
-            pre_equation = 'y={:.' + str(y.sig_dig) + 'e}x'
+            pre_equation = 'y={:.' + str(self.sig_dig) + 'e}x'
             equation = pre_equation.format(a)
             y.corr = np.corrcoef(x.values,y.values)[0][1]
             y.r_sq = y.corr ** 2
-            text_corr = 'R={:.4}'.format(round(y.corr,y.sig_dig))
+            text_corr = 'R={:.4}'.format(round(y.corr,self.sig_dig))
             text = equation + '\n' + text_corr
             plt.plot(x.values,y1,c=y.color,label=text)
 
@@ -88,14 +87,14 @@ class Graph_master:
             a,b = y.fit_values
             y1 = a * x.values + b
             if b >= 0:
-                pre_equation = 'y={:.' + str(y.sig_dig) + 'e}x+{:.' + str(y.sig_dig) + 'e}'
+                pre_equation = 'y={:.' + str(self.sig_dig) + 'e}x+{:.' + str(self.sig_dig) + 'e}'
                 equation = pre_equation.format(a,b)
             else:
-                pre_equation = 'y={:.' + str(y.sig_dig) + 'e}x-{:.' + str(y.sig_dig) + 'e}'
+                pre_equation = 'y={:.' + str(self.sig_dig) + 'e}x-{:.' + str(self.sig_dig) + 'e}'
                 equation = pre_equation.format(a,abs(b))
             y.corr = np.corrcoef(x.values,y.values)[0][1]
             y.r_sq = y.corr ** 2
-            text_corr = 'R={:.4}'.format(round(y.corr,y.sig_dig))
+            text_corr = 'R={:.4}'.format(round(y.corr,self.sig_dig))
             text = equation + '\n' + text_corr
             plt.plot(x.values,y1,c=y.color,label=text)
 
@@ -104,7 +103,7 @@ class Graph_master:
             x_line = np.linspace(min(x.values),max(x.values),100)
             y_line = a * x_line / (b + x_line)
             y1 = a * x.values / (b + x.values)
-            pre_equation = 'y={:.' + str(y.sig_dig) + 'e}x/({:.' + str(y.sig_dig) + 'e}+x)'
+            pre_equation = 'y={:.' + str(self.sig_dig) + 'e}x/({:.' + str(self.sig_dig) + 'e}+x)'
             equation = pre_equation.format(a,b)
             residuals =  y.values - mm(x.values,a,b)
             rss = np.sum(residuals**2)  #residual sum of squares = rss
@@ -126,6 +125,7 @@ class Graph_master:
 
         # 散布図と近似曲線のプロット
         input_text = 'もし比例の近似直線が欲しいなら1を、線形の近似直線が欲しいなら2を、'
+        input_text += 'ミカエリス・メンテン式の曲線で近似する場合は3を、'
         input_text += '近似直線が不要な場合はそれ以外の入力をしてください\n>> '
         ans = input(input_text)
         for var_y in ys:
@@ -159,7 +159,7 @@ def main(argv):
 
     # 表の出力
     msg = input('読み込むファイルにあらかじめグラフのタイトルなどを入れている場合は「1」を、そうでない場合はそれ以外の入力をしてください\n>> ')
-    if msg == "1" and len(array2[0]) == 4:
+    if msg == "1" and len(array2[0]) == 5:
         args = array2[0]
         del array2[0]
     else:
@@ -167,7 +167,8 @@ def main(argv):
         xlabel = input('x軸のラベルを入力してください(なるべく英語で)\n>>')
         ylabel = input('y軸のラベルを入力してください(なるべく英語で)\n>>')
         output_path = input('出力するファイル名を入力してください(なるべく英語で)\n>>')
-        args = [title,xlabel,ylabel,output_path]
+        sig_dig = input('今回のグラフで扱う有効数字を入力してください\n>> ')
+        args = [title,xlabel,ylabel,output_path,sig_dig]
 
     # データをオブジェクト化した上でプロット
     box = []
