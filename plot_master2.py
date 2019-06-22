@@ -62,13 +62,13 @@ class Graph_master:
                     args[i] = 'You should input some words'
                 elif i == 3:
                     args[i] = 'image'
-                elif i == 4:
-                    args[i] = 3
+            if i == 4 and x.isdecimal() == False:
+                args[i] = 3
         self.title = args[0]
         self.xlabel = args[1]
         self.ylabel = args[2]
         self.output_path = 'output/' + args[3]
-        self.sig_dig = args[4]
+        self.sig_dig = int(args[4])
 
     def plot_fitting(self,x,y):
         y.fitting(x.values)
@@ -110,7 +110,6 @@ class Graph_master:
             tss = np.sum((y.values - np.mean(y.values))**2) #total sum of squares = tss
             y.r_sq = 1 - (rss / tss)
             text_r_sq = 'R2={:.4}'.format(y.r_sq)
-            print(y.r_sq)
             text= equation + '\n' + text_r_sq
             plt.plot(x_line,y_line,c=y.color,label=text)
 
@@ -183,11 +182,14 @@ def main(argv):
 
     # 近似式と相関係数をcsvに出力する
     with open('output/'+args[3]+'-fitted.csv',mode='w') as f:
+        f.write('label,a,b\n')
         for i,y in enumerate(box):
-            f.write('label,a,b\n')
             text0 = ""
-            for i in y.fit_values:
-                text0 += ',' + str(i)
+            if y.fit_values.size == 1:
+                text0 = "," + str(y.fit_values)
+            else:
+                for i in y.fit_values:
+                    text0 += ',' + str(i)
             text = '{}{}\n'.format(y.label,text0)
             f.write(text)
 
