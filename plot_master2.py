@@ -142,6 +142,8 @@ class Graph_master:
         plt.subplots_adjust(right=0.7)
 
         plt.grid()
+
+    def output_graph(self):
         msg = input('作成したグラフを保存するなら「s」を、画面に表示するならそれ以外の入力をしてください\n>> ')
         if msg == "s":
             plt.savefig(self.output_path)
@@ -179,6 +181,7 @@ def main(argv):
             box.append(rows)
     graph = Graph_master(args)
     graph.make_graph(x,box)
+    graph.output_graph()
 
     # 近似式と相関係数をcsvに出力する
     with open('output/'+args[3]+'-fitted.csv',mode='w') as f:
