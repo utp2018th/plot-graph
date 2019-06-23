@@ -1,3 +1,5 @@
+# モジュールのインポート場所を変えるとエラーが起きることがあるので注意
+
 def get_file_name():
     import os, tkinter, tkinter.filedialog, tkinter.messagebox
 
@@ -26,6 +28,8 @@ def get_array_from_xlsx(path):
 
 class Plot_data:
     def __init__(self):
+        self.a = None
+        self.b = None
         self.v_max = None
         self.k_cat = None
         self.k_m = None
@@ -33,7 +37,7 @@ class Plot_data:
         self.rss = None
 
     def calc(self):
-        self.k_cat = self.v_max / (4.0 * 10**(-9))
+        self.k_cat = self.v_max / (4.0 * 10**(-3))
         self.k2 = self.k_cat / self.k_m
 
 def main():
@@ -57,8 +61,6 @@ def main():
         else:
             box.append(array)
 
-    data_array = []
-
     # 吸光度のプロットに必要な変数
     title = 'Absorbance to Time'
     xlabel = 'Time(sec)'
@@ -80,57 +82,52 @@ def main():
         else:
             v0.append(i.fit_values[0])
     v0 = np.array(v0)
-    e492 = 85000*10**(-6) # 勝手に10^-6倍してる
+    e492 = 85000*10**(-6) # 単位をμLに揃える
     v0 /= e492
+
+    # プロットのテンプレとなる関数
+    def plot_and_save(x,y,args,input_mode=None,max_x=None):
+        x = pm2.Data(x)
+        y = [""] + list(y)
+        ys = [pm2.Data(y)]
+        graph = pm2.Graph_master(args)
+        graph.make_graph(x,ys,input_mode,max_x)
+        plt.savefig(graph.output_path)
+        data = Plot_data()
+        for y in ys:
+            data.a = y.fit_values[0]
+            data.b = y.fit_values[1]
+            data.rss = y.rss
+        return data
+
+    data_array = []
 
     # ６点でミカエリスメンテン
     # 変数の定義
     title = 'Michaelis Menten Plot (6 dots)'
     xlabel = 'Substrate concentration (μM)'
-    ylabel = 'Reaction rate (M/sec)'
+    ylabel = 'Reaction rate (μM/sec)'
     output_path = 'day3/MichaelisMenten6'
     args = [title,xlabel,ylabel,output_path,sig_dig]
 
-    # プロット
-    x = pm2.Data(array_s)
-    y = ["v"] + list(v0)
-    y = pm2.Data(y)
-    ys = [y]
-    plt.ylim(min(y.values),max(y.values))
-    graph = pm2.Graph_master(args)
-    graph.make_graph(x,ys,input_mode="3",max_x=500)
-    plt.savefig(graph.output_path)
-    data = Plot_data()
-    for y in ys:
-        data.v_max = y.fit_values[0]
-        data.k_m = y.fit_values[1]
-        data.rss = y.rss
-        data.calc()
+    data = plot_and_save(array_s,v0,args,input_mode="3",max_x=500)
+    data.v_max = data.a
+    data.k_m = data.b
+    data.calc()
     data_array.append(data)
 
     # 4点でミカエリスメンテン
     # 変数の定義
     title = 'Michaelis Menten Plot (4 dots)'
     xlabel = 'Substrate concentration (μM)'
-    ylabel = 'Reaction rate (M/sec)'
+    ylabel = 'Reaction rate (μM/sec)'
     output_path = 'day3/MichaelisMenten4'
     args = [title,xlabel,ylabel,output_path,sig_dig]
 
-    # プロット
-    x = pm2.Data(array_s[:5])
-    y = ["v"] + list(v0[:4])
-    y = pm2.Data(y)
-    ys = [y]
-    plt.ylim(min(y.values),max(y.values))
-    graph = pm2.Graph_master(args)
-    graph.make_graph(x,ys,input_mode="4",max_x=500)
-    plt.savefig(graph.output_path)
-    data = Plot_data()
-    for y in ys:
-        data.v_max = y.fit_values[0]
-        data.k_m = y.fit_values[1]
-        data.rss = y.rss
-        data.calc()
+    data = plot_and_save(array_s[:5],v0[:4],args,input_mode="3",max_x=500)
+    data.v_max = data.a
+    data.k_m = data.b
+    data.calc()
     data_array.append(data)
 
     # Lineweaver-Burk Plot
@@ -138,6 +135,7 @@ def main():
     var_x = np.array(array_s[1:])
     var_x = 1 / var_x
     var_y = 1 / v0
+    var_x = [array_s[0]] + list(var_x)
 
     # 変数の定義
     title = 'Lineweaver-Burk Plot'
@@ -146,22 +144,10 @@ def main():
     output_path = 'day3/Lineweaver-Burk'
     args = [title,xlabel,ylabel,output_path,sig_dig]
 
-    # プロット
-    var_x = [array_s[0]] + list(var_x)
-    x = pm2.Data(var_x)
-    y = ["v"] + list(var_y)
-    y = pm2.Data(y)
-    ys = [y]
-    plt.ylim(min(y.values),max(y.values))
-    graph = pm2.Graph_master(args)
-    graph.make_graph(x,ys,input_mode="2",max_x=500)
-    plt.savefig(graph.output_path)
-    data = Plot_data()
-    for y in ys:
-        data.v_max = 1 / y.fit_values[1]
-        data.k_m = y.fit_values[0] / y.fit_values[1]
-        data.rss = y.rss
-        data.calc()
+    data = plot_and_save(var_x,var_y,args,input_mode="2")
+    data.v_max = 1 / data.b
+    data.k_m = data.a / data.b
+    data.calc()
     data_array.append(data)
 
     # Eadie-Hofstee Plot
@@ -169,30 +155,19 @@ def main():
     s = np.array(array_s[1:])
     var_y = v0
     var_x = v0 / s
+    var_x = [array_s[0]] + list(var_x)
 
     # 変数の定義
     title = 'Eadie-Hofstee Plot'
-    xlabel = 'Reaction rate / Substrate concentration'
+    xlabel = 'Reaction rate / Substrate concentration (sec^-1)'
     ylabel = 'Reaction rate (M/sec)'
     output_path = 'day3/Eadie-Hofstee'
     args = [title,xlabel,ylabel,output_path,sig_dig]
 
-    # プロット
-    var_x = [array_s[0]] + list(var_x)
-    x = pm2.Data(var_x)
-    y = ["v"] + list(var_y)
-    y = pm2.Data(y)
-    ys = [y]
-    plt.xlim(min(x.values),max(x.values))
-    graph = pm2.Graph_master(args)
-    graph.make_graph(x,ys,input_mode="2")
-    plt.savefig(graph.output_path)
-    data = Plot_data()
-    for y in ys:
-        data.v_max = y.fit_values[1]
-        data.k_m = - y.fit_values[0]
-        data.rss = y.rss
-        data.calc()
+    data = plot_and_save(var_x,var_y,args,input_mode="2")
+    data.v_max = data.b
+    data.k_m = - data.a
+    data.calc()
     data_array.append(data)
 
     def str_i(num):
@@ -200,8 +175,6 @@ def main():
 
     with open('output/day3/compare-k.csv',mode='w') as f:
         f.write(',M-M 6,M-M 4,L-B,E-H\n')
-        def join_values(i):
-            return
         k_cat = ",".join([str_i(i.k_cat) for i in data_array])
         f.write('k_cat,{}\n'.format(k_cat))
         k_m = ",".join([str_i(i.k_m) for i in data_array])

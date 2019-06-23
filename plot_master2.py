@@ -142,7 +142,10 @@ class Graph_master:
             input_text += '近似直線が不要な場合はそれ以外の入力をしてください\n>> '
             input_mode = input(input_text)
         for var_y in ys:
-            plt.scatter(var_x.values,var_y.values,label=var_y.label,c=var_y.color)
+            if var_y.label:
+                plt.scatter(var_x.values,var_y.values,label=var_y.label,c=var_y.color)
+            else:
+                plt.scatter(var_x.values,var_y.values,c=var_y.color)
             if input_mode ==  "1":
                 var_y.fit_type = fitting_types[0]
             elif input_mode == "2":
@@ -152,6 +155,12 @@ class Graph_master:
             elif input_mode == "4":
                 var_y.fit_type = fitting_types[3]
             self.plot_fitting(var_x,var_y,max_x)
+
+        # グラフの範囲の調節
+        # min_x = min(var_x.values) * 0.98
+        # if not max_x:
+        #     max_x = max(var_x.values) * 1.02
+        # plt.xlim(min_x,max_x)
 
         # グラフの外観をいい感じに調節しているのはここ
         plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0, fontsize=9)
