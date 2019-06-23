@@ -80,6 +80,10 @@ $ python replace_kaleida.py
 これを実行すると、分析するxlsxファイルを選択するウィンドウが表示されるので先ほど用意したxlsxファイルを選択してください。
 
 やることは以上です。`output/day3`フォルダの中に解析結果がぜーんぶ置いてあります。
+こんな風にね。
+![サンプル](https://github.com/utp2018th/plot-graph/blob/master/output/day3/MichaelisMenten6.png)
+
+
 反応速度定数などは[compare-k.csv](https://github.com/utp2018th/plot-graph/blob/master/output/day3/compare-k.csv)にあるように、csv形式でエクスポートされます。
 
 以上で2手詰めで月曜日の実習は終了です。よかったですね♡
