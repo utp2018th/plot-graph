@@ -35,6 +35,8 @@ class Plot_data:
         self.k_m = None
         self.k2 = None
         self.rss = None
+        self.x_values = None
+        self.y_values = None
 
     def calc(self):
         self.k_cat = self.v_max / (4.0 * 10**(-3))
@@ -73,6 +75,7 @@ def main():
     graph = pm2.Graph_master(args)
     graph.make_graph(x,box,input_mode="2")
     plt.savefig(graph.output_path)
+    plt.close()
 
     # 反応初速度を求める
     v0 = []
@@ -93,11 +96,14 @@ def main():
         graph = pm2.Graph_master(args)
         graph.make_graph(x,ys,input_mode,max_x)
         plt.savefig(graph.output_path)
+        plt.close()
         data = Plot_data()
+        data.x_values = x.values
         for y in ys:
             data.a = y.fit_values[0]
             data.b = y.fit_values[1]
             data.rss = y.rss
+            data.y_values = y.values
         return data
 
     data_array = []
@@ -110,11 +116,11 @@ def main():
     output_path = 'day3/MichaelisMenten6'
     args = [title,xlabel,ylabel,output_path,sig_dig]
 
-    data = plot_and_save(array_s,v0,args,input_mode="3",max_x=500)
-    data.v_max = data.a
-    data.k_m = data.b
-    data.calc()
-    data_array.append(data)
+    mm6 = plot_and_save(array_s,v0,args,input_mode="3",max_x=500)
+    mm6.v_max = mm6.a
+    mm6.k_m = mm6.b
+    mm6.calc()
+    data_array.append(mm6)
 
     # 4点でミカエリスメンテン
     # 変数の定義
@@ -124,11 +130,11 @@ def main():
     output_path = 'day3/MichaelisMenten4'
     args = [title,xlabel,ylabel,output_path,sig_dig]
 
-    data = plot_and_save(array_s[:5],v0[:4],args,input_mode="3",max_x=500)
-    data.v_max = data.a
-    data.k_m = data.b
-    data.calc()
-    data_array.append(data)
+    mm4 = plot_and_save(array_s[:5],v0[:4],args,input_mode="3",max_x=500)
+    mm4.v_max = mm4.a
+    mm4.k_m = mm4.b
+    mm4.calc()
+    data_array.append(mm4)
 
     # Lineweaver-Burk Plot
     # 下準備
@@ -144,11 +150,25 @@ def main():
     output_path = 'day3/Lineweaver-Burk'
     args = [title,xlabel,ylabel,output_path,sig_dig]
 
-    data = plot_and_save(var_x,var_y,args,input_mode="2")
-    data.v_max = 1 / data.b
-    data.k_m = data.a / data.b
-    data.calc()
-    data_array.append(data)
+    lb = plot_and_save(var_x,var_y,args,input_mode="2")
+    lb.v_max = 1 / lb.b
+    lb.k_m = lb.a / lb.b
+    lb.calc()
+    data_array.append(lb)
+
+    plt.figure(figsize=(9,6),dpi=128)
+    mm2lb_x = np.linspace(0,1,100)
+    mm2lb_y = mm6.b/mm6.a * mm2lb_x + 1/mm6.a
+    plt.scatter(lb.x_values,lb.y_values)
+    plt.plot(mm2lb_x,mm2lb_y,label='M-M\ny={:.3e}x+{:.3e}'.format(mm6.a,mm6.b))
+    lb_line = lb.a * mm2lb_x + lb.b
+    plt.plot(mm2lb_x,lb_line,label='L-B\ny={:.3e}x+{:.3e}'.format(lb.a,lb.b))
+    plt.title('M-M6 and L-B')
+    plt.xlabel('1 / Substrate concentration (/μM)')
+    plt.ylabel('1 / Reaction rate (sec/M)')
+    plt.legend()
+    plt.grid()
+    plt.savefig('output/day3/MM6-and-LB')
 
     # Eadie-Hofstee Plot
     # 下準備
@@ -164,11 +184,11 @@ def main():
     output_path = 'day3/Eadie-Hofstee'
     args = [title,xlabel,ylabel,output_path,sig_dig]
 
-    data = plot_and_save(var_x,var_y,args,input_mode="2")
-    data.v_max = data.b
-    data.k_m = - data.a
-    data.calc()
-    data_array.append(data)
+    eh = plot_and_save(var_x,var_y,args,input_mode="2")
+    eh.v_max = eh.b
+    eh.k_m = - eh.a
+    eh.calc()
+    data_array.append(eh)
 
     def str_i(num):
         return '{:.3e}'.format(num)
