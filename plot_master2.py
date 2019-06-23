@@ -28,7 +28,8 @@ def generate_random_color():
 fitting_types = (
     'proportion',
     'liner',
-    'Michaelis Menten'
+    'Michaelis Menten 6',
+    'Michaelis Menten 4',
     )
 
 def mm(x,a,b):
@@ -52,6 +53,8 @@ class Data:
             self.fit_values = np.polyfit(x,self.values,1)
         elif self.fit_type == fitting_types[2]:
             self.fit_values,cov = curve_fit(mm,x,self.values)
+        elif self.fit_type == fitting_types[3]:
+            self.fit_values,cov = curve_fit(mm,x[:4],self.values[:4])
 
 class Graph_master:
     # グラフの描画に関するクラスはこちら
@@ -70,8 +73,9 @@ class Graph_master:
         self.output_path = 'output/' + args[3]
         self.sig_dig = int(args[4])
 
-    def plot_fitting(self,x,y):
+    def plot_fitting(self,x,y,max_x=None):
         y.fitting(x.values)
+
         if y.fit_type == fitting_types[0]:
             a = y.fit_values
             y1 = a * x.values
@@ -98,9 +102,12 @@ class Graph_master:
             text = equation + '\n' + text_corr
             plt.plot(x.values,y1,c=y.color,label=text)
 
-        elif y.fit_type == fitting_types[2]:
+        elif y.fit_type in fitting_types[2:4]:
             a,b = y.fit_values
-            x_line = np.linspace(min(x.values),max(x.values),100)
+            if max_x:
+                x_line = np.linspace(min(x.values),max_x,100)
+            else:
+                x_line = np.linspace(min(x.values),max(x.values),100)
             y_line = a * x_line / (b + x_line)
             y1 = a * x.values / (b + x.values)
             pre_equation = 'y={:.' + str(self.sig_dig) + 'e}x/({:.' + str(self.sig_dig) + 'e}+x)'
@@ -116,26 +123,29 @@ class Graph_master:
         else:
             print("No Approximate Curve")
 
-    def make_graph(self,var_x,ys):
+    def make_graph(self,var_x,ys,input_mode=None,max_x=None):
         plt.figure(figsize=(9,6),dpi=128)
         plt.title(self.title)
         plt.xlabel(self.xlabel)
         plt.ylabel(self.ylabel)
 
         # 散布図と近似曲線のプロット
-        input_text = 'もし比例の近似直線が欲しいなら1を、線形の近似直線が欲しいなら2を、'
-        input_text += 'ミカエリス・メンテン式の曲線で近似する場合は3を、'
-        input_text += '近似直線が不要な場合はそれ以外の入力をしてください\n>> '
-        ans = input(input_text)
+        if not input_mode:
+            input_text = 'もし比例の近似直線が欲しいなら1を、線形の近似直線が欲しいなら2を、'
+            input_text += 'ミカエリス・メンテン式の曲線で近似する場合は3を、'
+            input_text += '近似直線が不要な場合はそれ以外の入力をしてください\n>> '
+            input_mode = input(input_text)
         for var_y in ys:
             plt.scatter(var_x.values,var_y.values,label=var_y.label,c=var_y.color)
-            if ans ==  "1":
+            if input_mode ==  "1":
                 var_y.fit_type = fitting_types[0]
-            elif ans == "2":
+            elif input_mode == "2":
                 var_y.fit_type = fitting_types[1]
-            elif ans == "3":
+            elif input_mode == "3":
                 var_y.fit_type = fitting_types[2]
-            self.plot_fitting(var_x,var_y)
+            elif input_mode == "4":
+                var_y.fit_type = fitting_types[3]
+            self.plot_fitting(var_x,var_y,max_x)
 
         # グラフの外観をいい感じに調節しているのはここ
         plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0, fontsize=9)

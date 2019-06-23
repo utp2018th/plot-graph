@@ -31,26 +31,6 @@ class Plot_data:
         self.k_m = None
         self.k2 = None
 
-def plot_and_save(args,x,y):
-    import matplotlib.pyplot as plt
-    import plot_master2 as pm2
-
-    x = pm2.Data(x)
-    y = ["v"] + list(y)
-    y = pm2.Data(y)
-    ys = [y]
-    plt.ylim(min(y.values),max(y.values))
-    graph = pm2.Graph_master(args)
-    graph.make_graph(x,ys)
-    plt.savefig(graph.output_path)
-    data = Plot_data()
-    for y in ys:
-        data.v_max = y.fit_values[0]
-        data.k_m = y.fit_values[1]
-        data.k_cat = data.v_max / (4.0*10**-9)
-        data.k2 = data.k_cat / data.k_m
-    return data
-
 def main():
     path = get_file_name()
     data = get_array_from_xlsx(path)
@@ -83,7 +63,7 @@ def main():
 
     # 吸光度の変化をプロットする
     graph = pm2.Graph_master(args)
-    graph.make_graph(x,box)
+    graph.make_graph(x,box,input_mode="2")
     plt.savefig(graph.output_path)
 
     # 反応初速度を求める
@@ -107,7 +87,22 @@ def main():
     args = [title,xlabel,ylabel,output_path,sig_dig]
 
     # プロット
-    data_array.append(plot_and_save(args,array_s,v0))
+    x = pm2.Data(array_s)
+    y = ["v"] + list(v0)
+    y = pm2.Data(y)
+    ys = [y]
+    plt.ylim(min(y.values),max(y.values))
+    graph = pm2.Graph_master(args)
+    graph.make_graph(x,ys,input_mode="3",max_x=500)
+    plt.savefig(graph.output_path)
+    data = Plot_data()
+    for y in ys:
+        data.v_max = y.fit_values[0]
+        data.k_m = y.fit_values[1]
+        data.k_cat = data.v_max
+        data.k2 = data.k_cat / data.k_m
+
+    data_array.append(data)
 
     # 4点でミカエリスメンテン
     # 変数の定義
@@ -118,11 +113,23 @@ def main():
     sig_dig = '4'
     args = [title,xlabel,ylabel,output_path,sig_dig]
 
-
-    print("v0",v0)
-    print("array_s",array_s)
     # プロット
-    data_array.append(plot_and_save(args,array_s[:5],v0[:4]))
+    x = pm2.Data(array_s[:5])
+    y = ["v"] + list(v0[:4])
+    y = pm2.Data(y)
+    ys = [y]
+    plt.ylim(min(y.values),max(y.values))
+    graph = pm2.Graph_master(args)
+    graph.make_graph(x,ys,input_mode="4",max_x=500)
+    plt.savefig(graph.output_path)
+    data = Plot_data()
+    for y in ys:
+        data.v_max = y.fit_values[0]
+        data.k_m = y.fit_values[1]
+        data.k_cat = data.v_max
+        data.k2 = data.k_cat / data.k_m
+
+    data_array.append(data)
 
 
 if __name__ == "__main__":
