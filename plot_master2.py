@@ -43,8 +43,9 @@ class Data:
         self.color = generate_random_color()
         self.fit_type = None
         self.fit_values = None
-        self.corr = None
-        self.r_sq = None
+        self.corr = None    # 相関係数
+        self.r_sq = None    # 決定係数
+        self.rss = None     # 残渣変動の二乗和
 
     def fitting(self,x):
         if self.fit_type == fitting_types[0]:
@@ -98,6 +99,11 @@ class Graph_master:
                 equation = pre_equation.format(a,abs(b))
             y.corr = np.corrcoef(x.values,y.values)[0][1]
             y.r_sq = y.corr ** 2
+
+            # ここの２行はreplace_kaleida用
+            residuals =  y.values - y1
+            y.rss = np.sum(residuals**2)  #residual sum of squares = rss
+
             text_corr = 'R={:.4}'.format(round(y.corr,self.sig_dig))
             text = equation + '\n' + text_corr
             plt.plot(x.values,y1,c=y.color,label=text)
@@ -113,9 +119,9 @@ class Graph_master:
             pre_equation = 'y={:.' + str(self.sig_dig) + 'e}x/({:.' + str(self.sig_dig) + 'e}+x)'
             equation = pre_equation.format(a,b)
             residuals =  y.values - mm(x.values,a,b)
-            rss = np.sum(residuals**2)  #residual sum of squares = rss
+            y.rss = np.sum(residuals**2)  #residual sum of squares = rss
             tss = np.sum((y.values - np.mean(y.values))**2) #total sum of squares = tss
-            y.r_sq = 1 - (rss / tss)
+            y.r_sq = 1 - (y.rss / tss)
             text_r_sq = 'R2={:.4}'.format(y.r_sq)
             text= equation + '\n' + text_r_sq
             plt.plot(x_line,y_line,c=y.color,label=text)
