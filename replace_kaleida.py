@@ -195,16 +195,21 @@ def main():
         data.calc()
     data_array.append(data)
 
+    def str_i(num):
+        return '{:.3e}'.format(num)
+
     with open('output/day3/compare-k.csv',mode='w') as f:
-        f.write(',M-M,6M-M,4L-B,E-H\n')
-        k_cat = ",".join([i.k_cat for i in data_array])
-        f.write(k_cat+'\n')
-        k_m = ",".join([i.k_m for i in data_array])
-        f.write(k_m+'\n')
-        k2 = ",".join([i.k2 for i in data_array])
-        f.write(k2+'\n')
-        rss = ",".join([i.rss for i in data_array])
-        f.write(rss+'\n')
+        f.write(',M-M 6,M-M 4,L-B,E-H\n')
+        def join_values(i):
+            return
+        k_cat = ",".join([str_i(i.k_cat) for i in data_array])
+        f.write('k_cat,{}\n'.format(k_cat))
+        k_m = ",".join([str_i(i.k_m) for i in data_array])
+        f.write('k__m,{}\n'.format(k_m))
+        k2 = ",".join([str_i(i.k2) for i in data_array])
+        f.write('k2,{}\n'.format(k2))
+        rss = ",".join([str_i(i.rss) for i in data_array])
+        f.write('rss,{}\n'.format(rss))
 
 
 if __name__ == "__main__":
