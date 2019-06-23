@@ -67,7 +67,7 @@ $ python plot_master2.py input/sample.csv
 
 1. 吸光度を記録したxlsxファイルを用意する。
 
-inputディレクトリに置いてある[テンプレ](https://github.com/utp2018th/plot-graph/blob/master/input/template-day3.xlsx)をコピーして自分が計測した吸光度をペーストし、保存しましょう。このとき、エクセルファイルのセルの背景に色がついている部分はいじらないでください。
+inputディレクトリに置いてある[テンプレ](https://github.com/utp2018th/plot-graph/blob/finish-all/input/template-day3.xlsx)をコピーして自分が計測した吸光度をペーストし、保存しましょう。このとき、エクセルファイルのセルの背景に色がついている部分はいじらないでください。
 
 2. プログラム実行
 
@@ -84,6 +84,6 @@ $ python replace_kaleida.py
 ![サンプル](https://github.com/utp2018th/plot-graph/blob/finish-all/output/day3/MichaelisMenten6.png)
 
 
-反応速度定数などは[compare-k.csv](https://github.com/utp2018th/plot-graph/blob/master/output/day3/compare-k.csv)にあるように、csv形式でエクスポートされます。
+反応速度定数などは[compare-k.csv](https://github.com/utp2018th/plot-graph/blob/finish-all/output/day3/compare-k.csv)にあるように、csv形式でエクスポートされます。
 
 以上で2手詰めで月曜日の実習は終了です。よかったですね♡
