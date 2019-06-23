@@ -46,11 +46,18 @@ def main():
     path = get_file_name()
     data = get_array_from_xlsx(path)
 
+    import os
     import numpy as np
     import matplotlib.pyplot as plt
     import plot_master2 as pm2
     import sys
     import csv
+
+    # 出力に必要なディレクトリがなければ作成する
+    if not os.path.exists('output'):
+        os.makedirs('output')
+    if not os.path.exists('output/day3'):
+        os.makedirs('output/day3')
 
     box = []
     array_s = []
@@ -154,15 +161,17 @@ def main():
     lb.v_max = 1 / lb.b
     lb.k_m = lb.a / lb.b
     lb.calc()
+    lb.rss = 1/lb.rss # とりあえずの策 これだけvの次元が-1乗なのでrssも適当に-1乗しておく
     data_array.append(lb)
 
+    # M-M と L-B の比較
     plt.figure(figsize=(9,6),dpi=128)
     mm2lb_x = np.linspace(0,1,100)
     mm2lb_y = mm6.b/mm6.a * mm2lb_x + 1/mm6.a
-    plt.scatter(lb.x_values,lb.y_values)
-    plt.plot(mm2lb_x,mm2lb_y,label='M-M\ny={:.3e}x+{:.3e}'.format(mm6.a,mm6.b))
+    plt.scatter(lb.x_values,lb.y_values,c='#4449aa')
+    plt.plot(mm2lb_x,mm2lb_y,c='#cb7a1a',label='M-M\ny={:.3e}x+{:.3e}'.format(mm6.a,mm6.b))
     lb_line = lb.a * mm2lb_x + lb.b
-    plt.plot(mm2lb_x,lb_line,label='L-B\ny={:.3e}x+{:.3e}'.format(lb.a,lb.b))
+    plt.plot(mm2lb_x,lb_line,c='#4449aa',label='L-B\ny={:.3e}x+{:.3e}'.format(lb.a,lb.b))
     plt.title('M-M6 and L-B')
     plt.xlabel('1 / Substrate concentration (/μM)')
     plt.ylabel('1 / Reaction rate (sec/M)')
