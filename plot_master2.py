@@ -29,7 +29,7 @@ fitting_types = (
     'proportion',
     'liner',
     'Michaelis Menten 6',
-    'Michaelis Menten 4',
+    'Michaelis Menten 4', # 使ってない
     )
 
 def mm(x,a,b):
@@ -68,6 +68,8 @@ class Graph_master:
                     args[i] = 'image'
             if i == 4 and x.isdecimal() == False:
                 args[i] = 3
+            if len(args) == 4:
+                args.append("3")
         self.title = args[0]
         self.xlabel = args[1]
         self.ylabel = args[2]
@@ -152,7 +154,7 @@ class Graph_master:
                 var_y.fit_type = fitting_types[1]
             elif input_mode == "3":
                 var_y.fit_type = fitting_types[2]
-            elif input_mode == "4":
+            elif input_mode == "4": # 使ってない
                 var_y.fit_type = fitting_types[3]
             self.plot_fitting(var_x,var_y,max_x)
 
@@ -185,7 +187,7 @@ def main(argv):
 
     # 表の出力
     msg = input('読み込むファイルにあらかじめグラフのタイトルなどを入れている場合は「1」を、そうでない場合はそれ以外の入力をしてください\n>> ')
-    if msg == "1" and len(array2[0]) == 5:
+    if msg == "1" and len(array2[0]) in (4,5):
         args = array2[0]
         del array2[0]
     else:
