@@ -29,11 +29,14 @@ fitting_types = (
     'proportion',
     'liner',
     'Michaelis Menten 6',
-    'Michaelis Menten 4', # 使ってない
+    'y = a * ln(x) + b',
     )
 
 def mm(x,a,b):
     return  a*x/(b+x)
+
+def lnx(x,a,b):
+    return a * np.log(x) + b
 
 class Data:
     # それぞれのデータ行をオブジェクトとするためのクラス
@@ -55,7 +58,7 @@ class Data:
         elif self.fit_type == fitting_types[2]:
             self.fit_values,cov = curve_fit(mm,x,self.values)
         elif self.fit_type == fitting_types[3]:
-            self.fit_values,cov = curve_fit(mm,x[:4],self.values[:4])
+            self.fit_values,cov = curve_fit(lnx,x,self.values)
 
 class Graph_master:
     # グラフの描画に関するクラスはこちら
@@ -110,7 +113,7 @@ class Graph_master:
             text = equation + '\n' + text_corr
             plt.plot(x.values,y1,c=y.color,label=text)
 
-        elif y.fit_type in fitting_types[2:4]:
+        elif y.fit_type == fitting_types[2]:
             a,b = y.fit_values
             if max_x:
                 x_line = np.linspace(min(x.values),max_x,100)
@@ -121,6 +124,28 @@ class Graph_master:
             pre_equation = 'y={:.' + str(self.sig_dig) + 'e}x/({:.' + str(self.sig_dig) + 'e}+x)'
             equation = pre_equation.format(a,b)
             residuals =  y.values - mm(x.values,a,b)
+            y.rss = np.sum(residuals**2)  #residual sum of squares = rss
+            tss = np.sum((y.values - np.mean(y.values))**2) #total sum of squares = tss
+            y.r_sq = 1 - (y.rss / tss)
+            text_r_sq = 'R2={:.4}'.format(y.r_sq)
+            text= equation + '\n' + text_r_sq
+            plt.plot(x_line,y_line,c=y.color,label=text)
+
+        elif y.fit_type == fitting_types[3]:
+            a,b = y.fit_values
+            if max_x:
+                x_line = np.linspace(min(x.values),max_x,100)
+            else:
+                x_line = np.linspace(min(x.values),max(x.values),100)
+            y_line = lnx(x_line,a,b)
+            y1 = lnx(x.values,a,b)
+            if b >= 0:
+                pre_equation = 'y={:.' + str(self.sig_dig) + 'e}*ln(x)+{:.' + str(self.sig_dig) + 'e}'
+                equation = pre_equation.format(a,b)
+            else:
+                pre_equation = 'y={:.' + str(self.sig_dig) + 'e}*ln(x)-{:.' + str(self.sig_dig) + 'e}'
+                equation = pre_equation.format(a,abs(b))
+            residuals =  y.values - lnx(x.values,a,b)
             y.rss = np.sum(residuals**2)  #residual sum of squares = rss
             tss = np.sum((y.values - np.mean(y.values))**2) #total sum of squares = tss
             y.r_sq = 1 - (y.rss / tss)
@@ -141,6 +166,7 @@ class Graph_master:
         if not input_mode:
             input_text = 'もし比例の近似直線が欲しいなら1を、線形の近似直線が欲しいなら2を、'
             input_text += 'ミカエリス・メンテン式の曲線で近似する場合は3を、'
+            input_text += '対数関数で近似する場合は4を、'
             input_text += '近似直線が不要な場合はそれ以外の入力をしてください\n>> '
             input_mode = input(input_text)
         for var_y in ys:
@@ -154,7 +180,7 @@ class Graph_master:
                 var_y.fit_type = fitting_types[1]
             elif input_mode == "3":
                 var_y.fit_type = fitting_types[2]
-            elif input_mode == "4": # 使ってない
+            elif input_mode == "4":
                 var_y.fit_type = fitting_types[3]
             self.plot_fitting(var_x,var_y,max_x)
 
