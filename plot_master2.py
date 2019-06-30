@@ -30,6 +30,7 @@ fitting_types = (
     'liner',
     'Michaelis Menten 6',
     'y = a * ln(x) + b',
+    'y = a * x ** b'
     )
 
 def mm(x,a,b):
@@ -37,6 +38,12 @@ def mm(x,a,b):
 
 def lnx(x,a,b):
     return a * np.log(x) + b
+
+def power(x,a,b):
+    return a * np.power(x,b)
+
+# 線形でない関数のリスト
+func_list = [mm,lnx,power]
 
 class Data:
     # それぞれのデータ行をオブジェクトとするためのクラス
@@ -56,9 +63,11 @@ class Data:
         elif self.fit_type == fitting_types[1]:
             self.fit_values = np.polyfit(x,self.values,1)
         elif self.fit_type == fitting_types[2]:
-            self.fit_values,cov = curve_fit(mm,x,self.values)
+            self.fit_values,cov = curve_fit(func_list[0],x,self.values)
         elif self.fit_type == fitting_types[3]:
-            self.fit_values,cov = curve_fit(lnx,x,self.values)
+            self.fit_values,cov = curve_fit(func_list[1],x,self.values)
+        elif self.fit_type == fitting_types[4]:
+            self.fit_values,cov = curve_fit(func_list[2],x,self.values)
 
 class Graph_master:
     # グラフの描画に関するクラスはこちら
@@ -114,16 +123,17 @@ class Graph_master:
             plt.plot(x.values,y1,c=y.color,label=text)
 
         elif y.fit_type == fitting_types[2]:
+            func = func_list[0]
             a,b = y.fit_values
             if max_x:
                 x_line = np.linspace(min(x.values),max_x,100)
             else:
                 x_line = np.linspace(min(x.values),max(x.values),100)
-            y_line = a * x_line / (b + x_line)
-            y1 = a * x.values / (b + x.values)
+            y_line = func(x_line,a,b)
+            y1 = func(x.values,a,b)
             pre_equation = 'y={:.' + str(self.sig_dig) + 'e}x/({:.' + str(self.sig_dig) + 'e}+x)'
             equation = pre_equation.format(a,b)
-            residuals =  y.values - mm(x.values,a,b)
+            residuals =  y.values - func(x.values,a,b)
             y.rss = np.sum(residuals**2)  #residual sum of squares = rss
             tss = np.sum((y.values - np.mean(y.values))**2) #total sum of squares = tss
             y.r_sq = 1 - (y.rss / tss)
@@ -132,20 +142,40 @@ class Graph_master:
             plt.plot(x_line,y_line,c=y.color,label=text)
 
         elif y.fit_type == fitting_types[3]:
+            func = func_list[1]
             a,b = y.fit_values
             if max_x:
                 x_line = np.linspace(min(x.values),max_x,100)
             else:
                 x_line = np.linspace(min(x.values),max(x.values),100)
-            y_line = lnx(x_line,a,b)
-            y1 = lnx(x.values,a,b)
+            y_line = func(x_line,a,b)
+            y1 = func(x.values,a,b)
             if b >= 0:
                 pre_equation = 'y={:.' + str(self.sig_dig) + 'e}*ln(x)+{:.' + str(self.sig_dig) + 'e}'
                 equation = pre_equation.format(a,b)
             else:
                 pre_equation = 'y={:.' + str(self.sig_dig) + 'e}*ln(x)-{:.' + str(self.sig_dig) + 'e}'
                 equation = pre_equation.format(a,abs(b))
-            residuals =  y.values - lnx(x.values,a,b)
+            residuals =  y.values - func(x.values,a,b)
+            y.rss = np.sum(residuals**2)  #residual sum of squares = rss
+            tss = np.sum((y.values - np.mean(y.values))**2) #total sum of squares = tss
+            y.r_sq = 1 - (y.rss / tss)
+            text_r_sq = 'R2={:.4}'.format(y.r_sq)
+            text= equation + '\n' + text_r_sq
+            plt.plot(x_line,y_line,c=y.color,label=text)
+
+        elif y.fit_type == fitting_types[4]:
+            func = func_list[2]
+            a,b = y.fit_values
+            if max_x:
+                x_line = np.linspace(min(x.values),max_x,100)
+            else:
+                x_line = np.linspace(min(x.values),max(x.values),100)
+            y_line = func(x_line,a,b)
+            y1 = func(x.values,a,b)
+            pre_equation = 'y={:.' + str(self.sig_dig) + 'e}*x**{:.' + str(self.sig_dig) + 'e}'
+            equation = pre_equation.format(a,b)
+            residuals =  y.values - func(x.values,a,b)
             y.rss = np.sum(residuals**2)  #residual sum of squares = rss
             tss = np.sum((y.values - np.mean(y.values))**2) #total sum of squares = tss
             y.r_sq = 1 - (y.rss / tss)
@@ -167,6 +197,7 @@ class Graph_master:
             input_text = 'もし比例の近似直線が欲しいなら1を、線形の近似直線が欲しいなら2を、'
             input_text += 'ミカエリス・メンテン式の曲線で近似する場合は3を、'
             input_text += '対数関数で近似する場合は4を、'
+            input_text += '累乗近似する場合は5を'
             input_text += '近似直線が不要な場合はそれ以外の入力をしてください\n>> '
             input_mode = input(input_text)
         for var_y in ys:
@@ -182,6 +213,8 @@ class Graph_master:
                 var_y.fit_type = fitting_types[2]
             elif input_mode == "4":
                 var_y.fit_type = fitting_types[3]
+            elif input_mode == "5":
+                var_y.fit_type = fitting_types[4]
             self.plot_fitting(var_x,var_y,max_x)
 
         # グラフの範囲の調節
@@ -191,8 +224,12 @@ class Graph_master:
         # plt.xlim(min_x,max_x)
 
         # グラフの外観をいい感じに調節しているのはここ
-        plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0, fontsize=9)
-        plt.subplots_adjust(right=0.7)
+        legend_mode = input('凡例をグラフ内に表示するなら1を外に表示するならそれ以外の入力をしてください\n>> ')
+        if  legend_mode == '1':
+            plt.legend()
+        else:
+            plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0, fontsize=9)
+            plt.subplots_adjust(right=0.7)
 
         plt.grid()
 
